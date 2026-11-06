@@ -47,13 +47,6 @@ python3 -m http.server 8000      # o: npm start
 node tests/ode.test.js           # pruebas del núcleo matemático (o: npm test)
 ```
 
-## Publicar en GitHub Pages
-```bash
-git init && git add . && git commit -m "SportLift: simulación EDO con Heun y RK4"
-git branch -M main
-git remote add origin https://github.com/TU-USUARIO/sportlift.git
-git push -u origin main
-```
 En GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**. El workflow `.github/workflows/pages.yml` ejecuta las pruebas y despliega. (Alternativa: Source = *Deploy from a branch*, rama `main`, carpeta `/ (root)`.)
 
 ## Estructura
