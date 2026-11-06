@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SportLift · Simulación de fuerza en Powerlifting</title>
+  <meta name="description" content="SportLift simula la evolución de la fuerza en sentadilla, press de banca y peso muerto con una EDO de primer orden, su solución analítica y los métodos numéricos de Heun y Runge-Kutta 4.">
+  <meta name="theme-color" content="#14181f">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="salto" href="#contenido">Saltar al contenido</a>
+
+  <header class="cabecera">
+    <div class="cabecera-in">
+      <a class="marca-app" href="#inicio" data-ir="inicio" aria-label="SportLift, inicio">
+        <svg viewBox="0 0 48 24" width="42" height="21" aria-hidden="true"><rect x="1" y="6" width="5" height="12" rx="1.5"/><rect x="7" y="2" width="5" height="20" rx="1.5"/><rect x="12" y="11" width="24" height="2" rx="1"/><rect x="36" y="2" width="5" height="20" rx="1.5"/><rect x="42" y="6" width="5" height="12" rx="1.5"/></svg>
+        <span>Sport<b>Lift</b></span>
+      </a>
+      <nav class="nav" aria-label="Secciones">
+        <button data-ir="inicio" class="activo">Inicio</button>
+        <button data-ir="deportistas">Deportistas</button>
+        <button data-ir="simulador">Simulador</button>
+        <button data-ir="historial">Historial</button>
+        <button data-ir="modelo">Modelo</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="aviso-hipotetico" role="note">
+    <strong>Modelo didáctico:</strong> los parámetros son <u>hipotéticos</u> y los resultados <u>no son predicciones fisiológicas comprobadas</u>.
+  </div>
+
+  <main id="contenido">
+
+    <!-- ===================== INICIO ===================== -->
+    <section id="inicio" class="vista activa" aria-labelledby="t-inicio">
+      <div class="heroe">
+        <p class="sobre">Desafío EDO · Métodos Numéricos</p>
+        <h1 id="t-inicio">¿Cuánto tardará tu 1RM en llegar a la meta?</h1>
+        <p class="lead">SportLift simula cómo evoluciona la fuerza en <b>sentadilla</b>, <b>press de banca</b> y <b>peso muerto</b> con una ecuación diferencial de primer orden, y mide qué tan bien la aproximan los métodos de <b>Heun</b> y <b>Runge-Kutta 4</b>.</p>
+        <div class="acciones">
+          <button class="btn primario" data-ir="simulador">Abrir simulador</button>
+          <button class="btn" data-ir="modelo">Ver el modelo matemático</button>
+        </div>
+      </div>
+
+      <div class="rejilla-2">
+        <article class="tarjeta">
+          <h2>El problema</h2>
+          <p><b>Comunidad:</b> personas que practican powerlifting de forma recreativa o competitiva (clubes, gimnasios universitarios y entrenadores).</p>
+          <p><b>Problema:</b> planificar sin referencia cuánto tiempo toma alcanzar una marca objetivo suele llevar a metas poco realistas, frustración o sobrecarga por querer acelerar.</p>
+          <p><b>Pregunta:</b> <i>¿en cuántas semanas llegaría un deportista a su meta de 1RM en cada levantamiento según un modelo sencillo, y qué tan precisas son las aproximaciones de Heun y RK4 respecto a la solución exacta?</i></p>
+          <p><b>Meta cuantificable:</b> estimar la semana <i>t*</i> en la que y(t*) = meta y comprobar que el error de RK4 sea menor que el de Heun.</p>
+        </article>
+        <article class="tarjeta">
+          <h2>La EDO en una línea</h2>
+          <p class="ecuacion" aria-label="dy/dt = k por I por (M menos y) menos delta por y, con y de cero igual a y cero">dy/dt = k·I·(M − y) − δ·y, &nbsp; y(0) = y₀</p>
+          <p>La fuerza <i>y</i> crece más rápido cuando está lejos de su techo <i>M</i> y se frena al acercarse (<b>rendimientos decrecientes</b>); entrenar con constancia impulsa la subida y la fatiga o el destrenamiento la frenan.</p>
+          <ul class="chips" aria-label="Métodos incluidos">
+            <li>Solución analítica</li><li>Heun (RK2)</li><li>Runge-Kutta 4</li>
+          </ul>
+        </article>
+      </div>
+
+      <article class="tarjeta">
+        <h2>Cómo usarla</h2>
+        <ol class="pasos">
+          <li><b>Registra</b> un deportista con sus marcas iniciales, metas y parámetros de entrenamiento (o usa los ejemplos ficticios).</li>
+          <li><b>Simula</b>: elige deportista y levantamiento, ajusta parámetros, tiempo total <i>T</i> y dos pasos <i>h</i>.</li>
+          <li><b>Compara</b> la tabla por iteraciones, la gráfica con las tres soluciones y los errores.</li>
+          <li><b>Guarda</b> la simulación en el historial para revisarla después.</li>
+        </ol>
+        <p class="estado-db" id="estado-db" aria-live="polite"></p>
+      </article>
+    </section>
+
+    <!-- ===================== DEPORTISTAS ===================== -->
+    <section id="deportistas" class="vista" aria-labelledby="t-dep">
+      <div class="cab-vista">
+        <div><h1 id="t-dep">Deportistas</h1><p class="sub">Marcas iniciales, metas y parámetros de entrenamiento (guardados en este dispositivo).</p></div>
+        <button class="btn primario" id="btn-nuevo">+ Nuevo deportista</button>
+      </div>
+      <div id="lista-deportistas" class="tarjetas-dep"></div>
+    </section>
+
+    <!-- ===================== SIMULADOR ===================== -->
+    <section id="simulador" class="vista" aria-labelledby="t-sim">
+      <div class="cab-vista">
+        <div><h1 id="t-sim">Simulador</h1><p class="sub">Resuelve la EDO con Heun y RK4 y compáralas con la solución analítica.</p></div>
+      </div>
+
+      <form id="form-sim" class="tarjeta formulario" novalidate autocomplete="off">
+        <h2>Datos de la simulación</h2>
+        <div class="grupo-campos">
+          <label class="campo"><span>Deportista</span>
+            <select id="s-deportista"></select>
+          </label>
+          <label class="campo"><span>Levantamiento</span>
+            <select id="s-lift">
+              <option value="sentadilla">Sentadilla</option>
+              <option value="banca">Press de banca</option>
+              <option value="muerto">Peso muerto</option>
+            </select>
+          </label>
+        </div>
+
+        <fieldset>
+          <legend>Condición inicial y metas</legend>
+          <div class="grupo-campos">
+            <label class="campo"><span>Marca inicial y₀ <em>kg</em></span><input id="s-y0" type="number" inputmode="decimal" step="any"><small class="err" data-err="y0"></small></label>
+            <label class="campo"><span>Meta <em>kg</em></span><input id="s-meta" type="number" inputmode="decimal" step="any"><small class="err" data-err="meta"></small></label>
+            <label class="campo"><span>Techo hipotético M <em>kg</em></span><input id="s-M" type="number" inputmode="decimal" step="any"><small class="err" data-err="M"></small></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Parámetros del modelo <span class="etq-hip">hipotéticos</span></legend>
+          <div class="grupo-campos">
+            <label class="campo"><span>Tasa de adaptación k <em>1/semana</em></span><input id="s-k" type="number" inputmode="decimal" step="any"><small class="err" data-err="k"></small></label>
+            <label class="campo"><span>Pérdida δ (fatiga/destrenamiento) <em>1/semana</em></span><input id="s-delta" type="number" inputmode="decimal" step="any"><small class="err" data-err="delta"></small></label>
+            <label class="campo"><span>Sesiones por semana <em>sesiones</em></span><input id="s-sesiones" type="number" inputmode="decimal" step="any"><small class="err" data-err="sesiones"></small></label>
+            <label class="campo"><span>Adherencia al plan <em>%</em></span><input id="s-adherencia" type="number" inputmode="decimal" step="any"><small class="err" data-err="adherencia"></small></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Intervalo y tamaño de paso</legend>
+          <div class="grupo-campos">
+            <label class="campo"><span>Tiempo total T <em>semanas</em></span><input id="s-T" type="number" inputmode="decimal" step="any"><small class="err" data-err="T"></small></label>
+            <label class="campo"><span>Paso h₁ <em>semanas</em></span><input id="s-h1" type="number" inputmode="decimal" step="any"><small class="err" data-err="h1"></small></label>
+            <label class="campo"><span>Paso h₂ <em>semanas</em></span><input id="s-h2" type="number" inputmode="decimal" step="any"><small class="err" data-err="h2"></small></label>
+          </div>
+        </fieldset>
+
+        <div id="avisos" class="avisos" aria-live="polite"></div>
+
+        <div class="acciones">
+          <button type="submit" class="btn primario">Simular</button>
+          <button type="button" class="btn" id="btn-restablecer">Restablecer valores del deportista</button>
+        </div>
+      </form>
+
+      <div id="resultados" hidden>
+        <div class="kpis" id="kpis"></div>
+
+        <article class="tarjeta">
+          <div class="cab-tarjeta">
+            <h2>Solución analítica, Heun y RK4</h2>
+            <div class="segmentado" id="sel-h" role="group" aria-label="Tamaño de paso a mostrar"></div>
+          </div>
+          <div id="graf-sol" class="grafica"></div>
+        </article>
+
+        <article class="tarjeta">
+          <h2>Error absoluto en cada iteración <span class="sub-h">(escala logarítmica, h₁ y h₂)</span></h2>
+          <div id="graf-err" class="grafica"></div>
+        </article>
+
+        <article class="tarjeta">
+          <h2>Comparación entre tamaños de paso</h2>
+          <div class="tabla-wrap"><table id="tabla-resumen" class="tabla"></table></div>
+          <h3>Estudio de convergencia <span class="sub-h">(h₁, h₁/2, h₁/4, h₁/8)</span></h3>
+          <div class="tabla-wrap"><table id="tabla-conv" class="tabla"></table></div>
+          <p class="nota">Orden observado ≈ log₂(E(h)/E(h/2)). Se espera ≈ 2 para Heun y ≈ 4 para RK4.</p>
+        </article>
+
+        <article class="tarjeta">
+          <div class="cab-tarjeta">
+            <h2>Tabla por iteraciones <span class="sub-h" id="tabla-h"></span></h2>
+          </div>
+          <div class="tabla-wrap alta"><table id="tabla-iter" class="tabla tabla-iter"></table></div>
+          <p class="nota">Error absoluto = |y<sub>exacta</sub> − y<sub>aprox</sub>| (kg). Error relativo % = error absoluto / |y<sub>exacta</sub>| × 100. Se calcula solo cuando y<sub>exacta</sub> ≠ 0.</p>
+        </article>
+
+        <article class="tarjeta destacada">
+          <h2>Interpretación de resultados</h2>
+          <div id="interpretacion" class="texto"></div>
+          <h3>Conclusiones</h3>
+          <ul id="conclusiones" class="texto lista"></ul>
+          <div class="acciones">
+            <button class="btn primario" id="btn-guardar-sim">Guardar en el historial</button>
+            <span id="msg-guardado" class="msg" role="status"></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================== HISTORIAL ===================== -->
+    <section id="historial" class="vista" aria-labelledby="t-his">
+      <div class="cab-vista">
+        <div><h1 id="t-his">Historial de simulaciones</h1><p class="sub">Simulaciones guardadas en este dispositivo.</p></div>
+        <div class="acciones">
+          <button class="btn" id="btn-exportar">Exportar respaldo</button>
+          <label class="btn" for="archivo-importar">Importar respaldo</label>
+          <input type="file" id="archivo-importar" accept="application/json,.json" hidden>
+          <button class="btn peligro" id="btn-vaciar">Vaciar historial</button>
+        </div>
+      </div>
+      <div id="lista-historial"></div>
+    </section>
+
+    <!-- ===================== MODELO ===================== -->
+    <section id="modelo" class="vista" aria-labelledby="t-mod">
+      <div class="cab-vista"><div><h1 id="t-mod">Modelo matemático</h1><p class="sub">Qué se modela, por qué y con qué límites.</p></div></div>
+
+      <article class="tarjeta texto">
+        <h2>1. Variables, parámetros y unidades</h2>
+        <div class="tabla-wrap"><table class="tabla">
+          <thead><tr><th>Símbolo</th><th>Significado</th><th>Unidad</th><th>Tipo</th></tr></thead>
+          <tbody>
+            <tr><td><i>t</i></td><td>Tiempo de entrenamiento (variable independiente)</td><td>semanas</td><td>variable</td></tr>
+            <tr><td><i>y(t)</i></td><td>Fuerza máxima (1RM) en un levantamiento (variable dependiente)</td><td>kg</td><td>variable</td></tr>
+            <tr><td><i>y₀</i></td><td>Marca inicial, condición inicial y(0)</td><td>kg</td><td>dato del deportista</td></tr>
+            <tr><td><i>M</i></td><td>Techo de fuerza considerado alcanzable</td><td>kg</td><td>hipotético</td></tr>
+            <tr><td><i>k</i></td><td>Tasa base de adaptación</td><td>1/semana</td><td>hipotético</td></tr>
+            <tr><td><i>I</i></td><td>Índice de entrenamiento = (adherencia/100)·min(sesiones, 6)/6</td><td>adimensional (0–1)</td><td>derivado</td></tr>
+            <tr><td><i>δ</i></td><td>Tasa de pérdida por fatiga o destrenamiento</td><td>1/semana</td><td>hipotético</td></tr>
+            <tr><td><i>λ</i></td><td>λ = k·I + δ, tasa total de relajación</td><td>1/semana</td><td>derivado</td></tr>
+            <tr><td><i>y<sub>eq</sub></i></td><td>Equilibrio y<sub>eq</sub> = k·I·M / λ</td><td>kg</td><td>derivado</td></tr>
+            <tr><td><i>h</i></td><td>Tamaño de paso de los métodos numéricos</td><td>semanas</td><td>numérico</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2>2. La EDO y su justificación</h2>
+        <p class="ecuacion">dy/dt = k·I·(M − y) − δ·y &nbsp;=&nbsp; c − λ·y, &nbsp; y(0) = y₀</p>
+        <ul>
+          <li><b>k·I·(M − y)</b>: la ganancia es proporcional a la distancia al techo; entrenar más (mayor <i>I</i>) acelera la adaptación y, cerca del techo, cada kilo cuesta más.</li>
+          <li><b>−δ·y</b>: una fracción de la fuerza se pierde por fatiga o falta de continuidad.</li>
+          <li>Es una EDO <b>lineal de primer orden</b> con solución exacta accesible.</li>
+        </ul>
+        <p><b>Supuestos:</b> sin lesiones ni cambios bruscos de plan; parámetros constantes durante todo el intervalo; cada levantamiento se modela por separado; la fuerza se resume en el 1RM. Intervalo de simulación: [0, T] semanas.</p>
+
+        <h2>3. Solución analítica</h2>
+        <p>Con λ &gt; 0 se resuelve por factor integrante: (y e<sup>λt</sup>)′ = c e<sup>λt</sup>, de donde:</p>
+        <p class="ecuacion">y(t) = y<sub>eq</sub> + (y₀ − y<sub>eq</sub>)·e<sup>−λt</sup>, &nbsp; y<sub>eq</sub> = c/λ</p>
+        <p><b>Comprobación por sustitución.</b></p>
+        <ul>
+          <li>Condición inicial: y(0) = y<sub>eq</sub> + (y₀ − y<sub>eq</sub>)·1 = y₀ ✔</li>
+          <li>Derivada: y′(t) = −λ(y₀ − y<sub>eq</sub>)e<sup>−λt</sup></li>
+          <li>Lado derecho: c − λy(t) = c − λy<sub>eq</sub> − λ(y₀ − y<sub>eq</sub>)e<sup>−λt</sup> = −λ(y₀ − y<sub>eq</sub>)e<sup>−λt</sup> (porque c = λy<sub>eq</sub>) = y′(t) ✔</li>
+        </ul>
+        <p>El simulador repite esta comprobación numéricamente (residuo y′ − f en 26 instantes) y muestra su valor en cada corrida. Además, el tiempo para llegar a una meta es <i>t*</i> = −(1/λ)·ln((meta − y<sub>eq</sub>)/(y₀ − y<sub>eq</sub>)), posible solo si meta &lt; y<sub>eq</sub>.</p>
+
+        <h2>4. Métodos numéricos</h2>
+        <p>Con f(t, y) = c − λy, paso h y t<sub>n+1</sub> = t<sub>n</sub> + h:</p>
+        <p><b>Heun (Runge-Kutta de orden 2):</b></p>
+        <p class="ecuacion">k₁ = f(tₙ, yₙ) &nbsp; k₂ = f(tₙ + h, yₙ + h·k₁) &nbsp; yₙ₊₁ = yₙ + (h/2)(k₁ + k₂)</p>
+        <p><b>Runge-Kutta clásico de orden 4:</b></p>
+        <p class="ecuacion">k₁ = f(tₙ, yₙ) &nbsp; k₂ = f(tₙ + h/2, yₙ + h·k₁/2) &nbsp; k₃ = f(tₙ + h/2, yₙ + h·k₂/2) &nbsp; k₄ = f(tₙ + h, yₙ + h·k₃)<br>yₙ₊₁ = yₙ + (h/6)(k₁ + 2k₂ + 2k₃ + k₄)</p>
+        <p>Ambos usan los mismos parámetros, y₀, intervalo y h. El error global esperado es O(h²) para Heun y O(h⁴) para RK4. Para esta EDO, Heun es estable si h·λ &lt; 2 y RK4 si h·λ &lt; ≈2.785; si no, pueden oscilar o divergir (la aplicación avisa).</p>
+
+        <h2>5. Limitaciones</h2>
+        <ul>
+          <li>Los valores de <i>k</i>, <i>δ</i>, <i>M</i> y el índice <i>I</i> son <b>hipotéticos</b>: no provienen de ajustar datos reales ni de estudios fisiológicos.</li>
+          <li>La fuerza real depende de nutrición, sueño, técnica, periodización, edad, lesiones y variabilidad individual; el modelo las resume en pocos números.</li>
+          <li>El modelo es una herramienta de <b>comprensión y comparación de métodos numéricos</b>, no un plan de entrenamiento ni consejo médico. Con datos reales, <i>k</i> y <i>δ</i> podrían estimarse por regresión.</li>
+          <li>Los errores medidos son errores <b>numéricos</b> (aproximación frente a la solución exacta del mismo modelo), no errores del modelo respecto a la realidad.</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+
+  <!-- ===================== DIÁLOGO DEPORTISTA ===================== -->
+  <dialog id="dlg-dep" aria-labelledby="dlg-titulo">
+    <form id="form-dep" method="dialog" novalidate autocomplete="off">
+      <div class="dlg-cab"><h2 id="dlg-titulo">Nuevo deportista</h2><button type="button" class="cerrar" id="dlg-cerrar" aria-label="Cerrar">×</button></div>
+      <div class="dlg-cuerpo">
+        <div class="grupo-campos">
+          <label class="campo ancho"><span>Nombre</span><input id="d-nombre" type="text" maxlength="60" required><small class="err" data-err="nombre"></small></label>
+          <label class="campo"><span>Peso corporal <em>kg</em></span><input id="d-peso" type="number" inputmode="decimal" step="any"><small class="err" data-err="peso"></small></label>
+        </div>
+        <fieldset>
+          <legend>Parámetros de entrenamiento <span class="etq-hip">hipotéticos</span></legend>
+          <div class="grupo-campos">
+            <label class="campo"><span>Sesiones por semana</span><input id="d-sesiones" type="number" inputmode="decimal" step="any"><small class="err" data-err="sesiones"></small></label>
+            <label class="campo"><span>Adherencia <em>%</em></span><input id="d-adherencia" type="number" inputmode="decimal" step="any"><small class="err" data-err="adherencia"></small></label>
+            <label class="campo"><span>Pérdida δ <em>1/semana</em></span><input id="d-delta" type="number" inputmode="decimal" step="any"><small class="err" data-err="delta"></small></label>
+          </div>
+        </fieldset>
+        <div id="d-lifts"></div>
+        <label class="campo"><span>Notas (opcional)</span><textarea id="d-notas" rows="2" maxlength="300"></textarea></label>
+      </div>
+      <div class="dlg-pie">
+        <button type="button" class="btn" id="dlg-cancelar">Cancelar</button>
+        <button type="submit" class="btn primario">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="pie">
+    <p><b>SportLift</b> · Proyecto académico de Métodos Numéricos (UMSA, Informática) · Autor: Javier Averanga Quelka</p>
+    <p>Modelo didáctico con parámetros hipotéticos. Los datos se guardan solo en este navegador. <a href="#modelo" data-ir="modelo">Ver modelo y limitaciones</a></p>
+  </footer>
+
+  <script src="js/ode.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
